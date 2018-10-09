@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: nil
 title: Power Outages
 permalink: /power-outages/
 ---

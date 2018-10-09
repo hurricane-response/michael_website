@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: nil
 title: Health Care
 permalink: /health-care/
 ---

@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: nil
 title: FEMA Assistance
 permalink: /fema-assistance/
 ---
