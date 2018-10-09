@@ -11,7 +11,7 @@ See the Jekyll docs for [local installation](https://jekyllrb.com/docs/installat
 **Description**:  A quick response web hub for hurricane response and sharing maps and data from [Shelter API](https://github.com/hurricane-response/florence-api)
 
 
-**Status**: The project is under development and live in production on https://michaelrepsonse.org
+**Status**: The project is under development and live in production on https://michaelresponse.org
 
 
 ![](https://raw.githubusercontent.com/hurricane-response/florence_website/master/screenshot.png)
