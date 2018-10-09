@@ -1,5 +1,5 @@
 ---
 layout: pod
-title: Hurricane Florence Points of Distribution Map
+title: Hurricane Michael Points of Distribution Map
 permalink: /distribution-map/
 ---

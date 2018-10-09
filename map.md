@@ -1,5 +1,5 @@
 ---
 layout: shelter_map
-title: Hurricane Florence Shelter Map
+title: Hurricane Michael Shelter Map
 permalink: /shelter-map/
 ---

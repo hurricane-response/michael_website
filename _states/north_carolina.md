@@ -4,7 +4,7 @@ name: North Carolina
 permalink: /north-carolina
 ---
 
-## Important Hurricane Florence North Carolina Information
+## Important Hurricane Michael North Carolina Information
 
 ### Evacuations
 
