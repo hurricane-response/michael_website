@@ -161,6 +161,6 @@ $map-height: 90vh;
   border-radius: 1em;
 
   &.evacuation-color {
-    background: rgb(251, 177, 178);
+    background: $evacuation-route-color;
   }
 }
