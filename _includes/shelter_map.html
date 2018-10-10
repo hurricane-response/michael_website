@@ -26,7 +26,7 @@
 
     const SHELTER_API = 'https://hurricane-florence-api.herokuapp.com/api/v1/shelters';
     // const SHELTER_API  = 'https://irma-api.herokuapp.com/api/v1/shelters';
-    const MAP_LOAD_CENTER = [-86.49, 30.39];
+    const MAP_LOAD_CENTER = [-84.9832, 29.7258];
 
     mapboxgl.accessToken = '{{site.mapbox_access_token}}';
 
@@ -34,7 +34,7 @@
         container: 'map',
         style: 'mapbox://styles/sbma44/cjm0qon9e7u8l2sqliotzrlmi',
         center: MAP_LOAD_CENTER,
-        zoom: 7.1
+        zoom: 7.3
     });
     var oReq = new XMLHttpRequest();
     oReq.onload = function (e) {
