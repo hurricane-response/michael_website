@@ -19,6 +19,31 @@
         </ul>
     </div>
 </div>
+<div id="ShelterMapLegend">
+    <ul id="LegendDetails" class="legend-details visible">
+        <li class="legend-item">
+            <div class="legend-item_label">
+                Evacuation Route
+            </div>
+            <div class="legend-item_key">
+                <div class="color-circle evacuation-color"></div>
+            </div>
+        </li>
+        <li class="legend-item">
+            <div class="legend-item_label">
+                Shelter
+            </div>
+            <div class="legend-item_key">
+                <img src="/assets/images/shelter-icon.png" alt="Shelter Icon">
+            </div>
+        </li>
+    </ul>
+    <div class="legend-header">
+        <svg id="icon-toggle-legend" class="legend-expand-button" aria-label="legend toggle" viewBox="0 0 32 32" onclick="toggleLegend();">
+            <path d="M2 6h28v6h-28zM2 14h28v6h-28zM2 22h28v6h-28z"></path>
+        </svg>
+    </div>
+</div>
 <script>
     window.shelters = null;
     let sheltersShown = [];
@@ -319,6 +344,19 @@
             default:
                 console.error('Filter action not registered: ', action);
                 return current;
+        }
+    }
+
+    /**
+     * Legend Controls
+     */
+
+    function toggleLegend() {
+        const legendRef = document.getElementById('LegendDetails');
+        if (legendRef.className.match('visible')) {
+            legendRef.className = legendRef.className.replace(' visible', '');
+        } else {
+            legendRef.className = legendRef.className.concat(' visible');
         }
     }
 </script>
