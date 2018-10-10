@@ -1,0 +1,27 @@
+#MobileNavMenu {
+  display: none;
+  width: 100vw;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+
+  &.is-active {
+    display: flex;
+  }
+
+}
+
+.navbar-item.is-current {
+  background-color: #fafafa;
+  color: $blue;
+}
+
+@media (min-width: 1088px) {
+  .navbar-item img {
+    max-height: 3.75rem;
+  }
+
+  #MobileNavMenu, #MobileNavMenu.is-active {
+    display: none;
+  }
+}
