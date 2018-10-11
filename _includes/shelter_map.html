@@ -19,6 +19,26 @@
         </ul>
     </div>
 </div>
+<div id="ShelterMapLegend">
+    <ul id="LegendDetails" class="legend-details visible">
+        <li class="legend-item">
+            <div class="legend-item_label">
+                Evacuation Route
+            </div>
+            <div class="legend-item_key">
+                <div class="color-circle evacuation-color"></div>
+            </div>
+        </li>
+        <li class="legend-item">
+            <div class="legend-item_label">
+                Shelter
+            </div>
+            <div class="legend-item_key">
+                <img src="/assets/images/shelter-icon.png" alt="Shelter Icon">
+            </div>
+        </li>
+    </ul>
+</div>
 <script>
     window.shelters = null;
     let sheltersShown = [];
@@ -47,8 +67,9 @@
     oReq.responseType = 'json';
     oReq.send();
     var navControl = new mapboxgl.NavigationControl();
-    map.addControl(navControl, 'top-right');
+    map.addControl(navControl, 'bottom-right');
     map.addControl(new mapboxgl.GeolocateControl({
+        className: 'control-geolocate',
         positionOptions: {
             enableHighAccuracy: true
         },
@@ -319,6 +340,19 @@
             default:
                 console.error('Filter action not registered: ', action);
                 return current;
+        }
+    }
+
+    /**
+     * Legend Controls
+     */
+
+    function toggleLegend() {
+        const legendRef = document.getElementById('LegendDetails');
+        if (legendRef.className.match('visible')) {
+            legendRef.className = legendRef.className.replace(' visible', '');
+        } else {
+            legendRef.className = legendRef.className.concat(' visible');
         }
     }
 </script>
