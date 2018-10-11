@@ -38,11 +38,6 @@
             </div>
         </li>
     </ul>
-    <div class="legend-header">
-        <svg id="icon-toggle-legend" class="legend-expand-button" aria-label="legend toggle" viewBox="0 0 32 32" onclick="toggleLegend();">
-            <path d="M2 6h28v6h-28zM2 14h28v6h-28zM2 22h28v6h-28z"></path>
-        </svg>
-    </div>
 </div>
 <script>
     window.shelters = null;
@@ -72,8 +67,9 @@
     oReq.responseType = 'json';
     oReq.send();
     var navControl = new mapboxgl.NavigationControl();
-    map.addControl(navControl, 'top-right');
+    map.addControl(navControl, 'bottom-right');
     map.addControl(new mapboxgl.GeolocateControl({
+        className: 'control-geolocate',
         positionOptions: {
             enableHighAccuracy: true
         },
