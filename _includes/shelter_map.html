@@ -115,17 +115,6 @@
         });
     }
 
-    //
-    // function renderSearch() {
-    //     map.addControl(new MapboxGeocoder({
-    //         accessToken: mapboxgl.accessToken,
-    //         localGeocoder: searchShelters,
-    //         zoom: 14,
-    //         placeholder: "Enter search e.g. Lincoln Park"
-    //     }));
-    // }
-
-
     const onSearchInput$ = Rx.Observable.fromEvent(
             document.getElementById('ShelterSearchInput'),
             'keyup'
