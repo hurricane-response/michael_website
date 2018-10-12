@@ -23,7 +23,7 @@
                 <!--<li class="filter-item" id="ShelterFilter_All" onclick="onFilterClick(this.id)">All</li>-->
                 <!--<li class="filter-item" id="ShelterFilter_Accepting" onclick="onFilterClick(this.id)">Accepting</li>-->
                 <li class="filter-item" id="ShelterFilter_SpecialNeeds" onclick="onFilterClick(this.id)">Special Needs</li>
-                <li class="filter-item" id="ShelterFilter_PetsOK" onclick="onFilterClick(this.id)">Pets allowed</li>
+                <li class="filter-item" id="ShelterFilter_PetsOK" onclick="onFilterClick(this.id)">Pets Allowed</li>
                 <!--<li class="filter-item" id="ShelterFilter_SuppliesNeeded" onclick="onFilterClick(this.id)">Supplies Needed</li>-->
                 <!--<li class="filter-item" id="ShelterFilter_VolunteersNeeded" onclick="onFilterClick(this.id)">Volunteers Needed</li>-->
             </ul>
@@ -70,55 +70,10 @@
     // const SHELTER_API  = 'https://irma-api.herokuapp.com/api/v1/shelters';
     const MAP_LOAD_CENTER = [-84.9832, 29.7258];
 
-
-    /**
-     * Search
-     */
-
-    /**
-     * builds a searchable lunr index from an array of documents.
-     *
-     * @param documents
-     * @return {*}
-     */
-    function buildIndex(documents) {
-        return lunr(function () {
-            this.ref('id');
-            this.field('shelter');
-            this.field('address');
-            this.field('county');
-            this.field('zip');
-            this.field('city');
-            this.field('notes');
-
-            documents.forEach(function (doc) {
-                this.add(doc)
-            }, this)
-        });
-    }
-
-    function searchShelters(query, fuzz = 2) {
-        query = query
-            .replace(' ', `~${fuzz} `);
-            if (query[-1] !== ' ') {
-                query = query.concat(`~${fuzz}`);
-            }
-        const matches = buildIndex(shelters).search(query);
-        const matchedIds = matches.map(match => match.ref);
-        return shelters.filter(shelter => {
-            for (let id of matchedIds) {
-                if (+id === +shelter.id) {
-                    return true;
-                }
-            }
-            return false;
-        });
-    }
-
     const onSearchInput$ = Rx.Observable.fromEvent(
-            document.getElementById('ShelterSearchInput'),
-            'keyup'
-        );
+        document.getElementById('ShelterSearchInput'),
+        'keyup'
+    );
 
     onSearchInput$
         .debounceTime(1000)
@@ -131,50 +86,9 @@
             }
         });
 
-    function renderSearchResults(results) {
-        let template = ``;
-        const resultsRef = document.getElementById('SearchResultsList');
-        for (let result of results) {
-            template += searchResultTemplate(result);
-        }
-        resultsRef.innerHTML = template;
-    }
-
-    function clearSearch() {
-        document.getElementById('ShelterSearchInput').value = '';
-        document.getElementById('SearchResultsList').innerHTML = '';
-    }
-
-    function moveTo(lng, lat, shelterId){
-        console.log('cords?', lng, lat);
-        map.flyTo({
-            center: [+lng, +lat],
-            zoom: 9
-        });
-        // map.fireEvent('click', {latlng: L.latLng(+lat, +lng)});
-        for ( let shelter of sheltersShown) {
-            console.log(+shelter.id, shelterId);
-            if (+shelter.id === +shelterId) {
-                console.log('hit', shelter.id, shelterId);
-                const popup = new mapboxgl.Popup({
-                    offset: 25,
-                    className: 'shelter-popup'
-                });
-                if (currentPopup) {
-                    currentPopup.remove();
-                }
-                currentPopup = popup;
-                popup.setLngLat([shelter.longitude, shelter.latitude])
-                    .setHTML(popupTemplate(shelter))
-                    .addTo(map);
-            }
-        }
-    }
-
     /**
-     *  /End Search
+     *  Map Init
      */
-
 
     mapboxgl.accessToken = '{{site.mapbox_access_token}}';
 
@@ -197,6 +111,113 @@
         },
         trackUserLocation: true
     }));
+
+
+    /**
+     * Search
+     */
+
+    /**
+     * builds a searchable lunr index from an array of documents.
+     *
+     * @param documents
+     * @return {*}
+     */
+    function buildIndex(documents) {
+        return lunr(function () {
+            this.ref('id');
+            this.field('shelter');
+            this.field('address');
+            this.field('county');
+            this.field('zip');
+            this.field('city');
+
+            documents.forEach(function (doc) {
+                this.add(doc)
+            }, this)
+        });
+    }
+
+    /**
+     * takes in a query string and outputs an array of shelters
+     *
+     * @param query
+     * @param fuzz
+     * @returns {shelters}
+     */
+    function searchShelters(query, fuzz = 1) {
+        query = query
+            .replace(' ', `~${fuzz} `);
+            if (query[-1] !== ' ') {
+                query = query.concat(`~${fuzz}`);
+            }
+        const matches = buildIndex(sheltersShown).search(query);
+        const matchedIds = matches.map(match => match.ref);
+        console.log(matches);
+        return shelters.filter(shelter => {
+            for (let id of matchedIds) {
+                if (+id === +shelter.id) {
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
+
+    function renderSearchResults(results) {
+        let template = ``;
+        const resultsRef = document.getElementById('SearchResultsList');
+        for (let result of results) {
+            template += searchResultTemplate(result);
+        }
+        resultsRef.innerHTML = template;
+    }
+
+    /**
+     * clears search bar and removes the search results list.
+     *
+     * @returns {void}
+     */
+    function clearSearch() {
+        document.getElementById('ShelterSearchInput').value = '';
+        document.getElementById('SearchResultsList').innerHTML = '';
+    }
+
+    /**
+     * positions map and opens a popup for that shelter location
+     *
+     * @param lng
+     * @param lat
+     * @param shelterId
+     * @return {void}
+     */
+    function moveTo(lng, lat, shelterId){
+        map.flyTo({
+            center: [+lng, +lat],
+            zoom: 9
+        });
+        for ( let shelter of sheltersShown) {
+            console.log(+shelter.id, shelterId);
+            if (+shelter.id === +shelterId) {
+                console.log('hit', shelter.id, shelterId);
+                const popup = new mapboxgl.Popup({
+                    offset: 25,
+                    className: 'shelter-popup'
+                });
+                if (currentPopup) {
+                    currentPopup.remove();
+                }
+                currentPopup = popup;
+                popup.setLngLat([shelter.longitude, shelter.latitude])
+                    .setHTML(popupTemplate(shelter))
+                    .addTo(map);
+            }
+        }
+    }
+
+    /**
+     *  /End Search
+     */
 
     function onShelterFetch(e) {
         if (!(e && e.target && e.target.response && e.target.response.shelters)) {
@@ -339,6 +360,12 @@
         }
     }
 
+    /**
+     * activates the filter button and reduces the shownShelters to an accumulated filter conditions.
+     *
+     * @param id
+     * @returns {void}
+     */
     function onFilterClick(id) {
         const filterButtonRef = document.getElementById(id);
         const action = id.split('_')[1];
@@ -367,12 +394,20 @@
         }
     }
 
+    /**
+     * reduces the shownShelters relative filter actions
+     *
+     * @param actions
+     * @returns {void}
+     */
     function filterRenderMarkersByActions(actions) {
         const nextSheltersShown = actions.reduce((nextShown, action) => {
             return nextShown = filterReducer(nextShown, action);
         }, shelters);
 
+        const query = document.getElementById('ShelterSearchInput').value;
         populateMarkers(nextSheltersShown);
+        renderSearchResults(searchShelters(query));
     }
 
     function filterReducer(current, action) {

@@ -38,7 +38,6 @@ $map-height: 100%;
   transform: translateX(-50%);
 }
 
-
 #map-container.shelter-map_container #map {
   min-height: $map-height;
   max-height: $map-height;
@@ -49,12 +48,14 @@ $map-height: 100%;
   top: 10px;
   right: 138px;
   left: 10px;
+  height: 0;
 }
 .shelter-map-controls {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
 }
+
 // Geolocate Control
 
 .mapboxgl-ctrl-top-right .mapboxgl-ctrl {
@@ -105,6 +106,7 @@ $map-height: 100%;
 
 .filter-viewBox {
   overflow: hidden;
+  width: 80px;
 }
 
 #ShelterFiltersUL {
