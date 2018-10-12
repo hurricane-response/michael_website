@@ -31,14 +31,6 @@
         <ul id="SearchResultsList"></ul>
     </div>
 </div>
-
-<script src="https://unpkg.com/lunr/lunr.js"></script>
-
-<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.min.js'></script>
-<link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.css' type='text/css' />
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/5.4.3/Rx.js"></script>
-
 <div id="ShelterMapLegend">
     <ul id="LegendDetails" class="legend-details visible">
         <li class="legend-item">
@@ -59,6 +51,12 @@
         </li>
     </ul>
 </div>
+<script src="https://unpkg.com/lunr/lunr.js"></script>
+
+<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.min.js'></script>
+<link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v2.3.0/mapbox-gl-geocoder.css' type='text/css' />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/5.4.3/Rx.js"></script>
 
 <script>
     window.shelters = null;
@@ -162,6 +160,13 @@
             return false;
         });
     }
+
+    /**
+     * puts the search results on the screen
+     *
+     * @param results
+     * @returns {void}
+     */
 
     function renderSearchResults(results) {
         let template = ``;
@@ -314,8 +319,8 @@
      *
      * Note: sh3lters is spelled this way to prevent window object collision.
      *
-     * @param sh3lters
-     * @return void
+     * @param sh3lters : shelter
+     * @return {void}
      */
     function populateMarkers(sh3lters) {
         sheltersShown.forEach(shelter => {
@@ -342,6 +347,11 @@
      * Filters
      */
 
+    /**
+     * shows/hides the filter options
+     *
+     * @returns{void}
+     */
     function toggleFiltersVisibility() {
         const filtersRef = document.getElementById('ShelterFiltersUL');
         const filtersButtonRef = document.getElementById('ShelterFilterToggle');
@@ -359,7 +369,7 @@
     /**
      * activates the filter button and reduces the shownShelters to an accumulated filter conditions.
      *
-     * @param id
+     * @param id : number
      * @returns {void}
      */
     function onFilterClick(id) {
@@ -393,7 +403,7 @@
     /**
      * reduces the shownShelters relative filter actions
      *
-     * @param actions
+     * @param actions : string[]
      * @returns {void}
      */
     function filterRenderMarkersByActions(actions) {
@@ -406,6 +416,14 @@
         renderSearchResults(searchShelters(query));
     }
 
+
+    /**
+     * Used to filter the current showing shelters by a filter action which is the second half of the filters html id
+     *
+     * @param current {sheltersShown}
+     * @param action {string}
+     * @returns sheltersShown
+     */
     function filterReducer(current, action) {
         switch(action) {
             case'All':
@@ -426,7 +444,12 @@
         }
     }
 
-
+    /**
+     * generates a list item for the search results list
+     *
+     * @param props: shelter
+     * @returns {string}
+     */
     function searchResultTemplate(props) {
         return `
             <li class="search-result_item" onclick="moveTo(${props.longitude}, ${props.latitude}, ${props.id})">
@@ -494,7 +517,7 @@
                     ${isPhone(shelter) ? phoneLink : ``}
                     <div class="controls">
                         ${!!shelter.address
-            ? `
+                        ? `
                             <a class="directions button is-link" target="_blank" href="https://www.google.com/maps/dir/current+location/${encodeURIComponent(shelterAddressToString(shelter))}" aria-label="Get directions button">
                                 <svg id="icon-directions" height="100%" viewBox="0 0 32 32" aria-label="directions icon">
                                     <path d="M17 32c-0.072 0-0.144-0.008-0.217-0.024-0.458-0.102-0.783-0.507-0.783-0.976v-15h-15c-0.469 0-0.875-0.326-0.976-0.783s0.129-0.925 0.553-1.123l30-14c0.381-0.178 0.833-0.098 1.13 0.199s0.377 0.749 0.199 1.13l-14 30c-0.167 0.358-0.524 0.577-0.906 0.577zM5.508 14h11.492c0.552 0 1 0.448 1 1v11.492l10.931-23.423-23.423 10.931z"></path>
@@ -502,8 +525,7 @@
                                 <div class="separator"></div>
                                 <label>Directions</label>
                             </a>
-                        `
-            : ``}
+                        ` : ``}
                     </div>
                     ${!!shelter.notes ? note : ``}
                     ${!!shelter.pets_notes ? petsNote : ``}

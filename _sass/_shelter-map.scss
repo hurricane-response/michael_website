@@ -1,4 +1,4 @@
-$map-height: 100%;
+$map-height: 90vh;
 
 .shelter-popup > .mapboxgl-popup-content {
   padding: 0;
@@ -21,26 +21,18 @@ $map-height: 100%;
 
 }
 
-.container.shelter-map {
-  //position: relative;
-}
-
 #map-container {
-  overflow: hidden;
-}
+  max-height: $map-height;
 
-.map-wrapper {
-  position: relative;
-  margin: auto;
-  max-width: 100vw;
-  min-width: 90vw;
-  left: 50%;
-  transform: translateX(-50%);
+  #map {
+    height: 100%;
+  }
 }
 
 #map-container.shelter-map_container #map {
-  min-height: $map-height;
-  max-height: $map-height;
+  height: $map-height;
+  margin-bottom: 0;
+
 }
 
 .shelter-map_info {
@@ -56,7 +48,9 @@ $map-height: 100%;
   justify-content: flex-start;
 }
 
+
 // Geolocate Control
+
 
 .mapboxgl-ctrl-top-right .mapboxgl-ctrl {
   margin: 12px 10px 0 0;
@@ -85,7 +79,9 @@ $map-height: 100%;
   transform: translateX(-100%);
 }
 
+
 // Filter Controls
+
 
 #ShelterFilterToggle, #geolocate {
 
@@ -119,10 +115,12 @@ $map-height: 100%;
   max-width: 80px;
   transform: translateY(-200%);
   transition: all ease-in-out 0.4s;
+
   li {
     white-space: normal;
     size: 0.7em;
   }
+
   li, li:focus {
     background: rgba(255, 255, 255, 0.8);
     padding: 10px 10px;
@@ -142,8 +140,11 @@ $map-height: 100%;
   }
 }
 
+
+// Search
+
+
 #ShelterSearch {
-  //position: relative;
   width: 100%;
 
   & .control {
@@ -181,6 +182,10 @@ $map-height: 100%;
     padding: 0 6px;
   }
 }
+
+
+// Map Legend
+
 
 #ShelterMapLegend {
   max-width: 100vw;
@@ -237,6 +242,10 @@ $map-height: 100%;
     background: $evacuation-route-color;
   }
 }
+
+
+// Responsive
+
 
 @media (max-width: 480px) {
   .mapboxgl-ctrl-top-right div::after {
