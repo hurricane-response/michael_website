@@ -3,10 +3,13 @@
     </div>
     <div class="shelter-map_info">
         <div class="shelter-map-controls">
-            <div id="ShelterSearch" class="field search-wrapper">
+            <div id="ShelterSearch" class="field has-addons search-wrapper">
                 <div class="control">
                     <input class="input" type="text" id="ShelterSearchInput" placeholder="Search Shelters" >
                 </div>
+                <a class="control">
+                    <button class="button is-danger" onclick="clearSearch();">X</button>
+                </a>
             </div>
             <button id="ShelterFilterToggle" class="button is-info is-small" onclick="toggleFiltersVisibility();">
                 <svg id="icon-filter" viewBox="0 0 32 32" aria-label="filter icon">
@@ -128,11 +131,15 @@
             'keyup'
         );
 
-    onSearchInput$.distinctUntilChanged()
+    onSearchInput$
         .debounceTime(1000)
         .subscribe(res => {
-            const results = searchShelters(res.target.value);
-            renderSearchResults(results)
+            if (!res.target.value) {
+                clearSearch()
+            } else {
+                const results = searchShelters(res.target.value);
+                renderSearchResults(results)
+            }
         });
 
     function renderSearchResults(results) {
@@ -144,14 +151,9 @@
         resultsRef.innerHTML = template;
     }
 
-    function searchResultTemplate(props) {
-        return `
-            <li class="search-result_item" onclick="moveTo(${props.longitude}, ${props.latitude}, ${props.id})">
-                <div class="search-result_name"><bold>${props.shelter}</bold></div>
-                <div class="search-result_address"><small>${isFullAddress(props) ? props.address : shelterAddressToString(props)}</small></div>
-           </li>
-        `;
-
+    function clearSearch() {
+        document.getElementById('ShelterSearchInput').value = '';
+        document.getElementById('SearchResultsList').innerHTML = '';
     }
 
     function moveTo(lng, lat, shelterId){
@@ -180,8 +182,6 @@
         }
     }
 
-
-
     /**
      *  /End Search
      */
@@ -203,7 +203,6 @@
     var navControl = new mapboxgl.NavigationControl();
     map.addControl(navControl, 'bottom-right');
     map.addControl(new mapboxgl.GeolocateControl({
-        className: 'control-geolocate',
         positionOptions: {
             enableHighAccuracy: true
         },
@@ -407,6 +406,16 @@
         }
     }
 
+
+    function searchResultTemplate(props) {
+        return `
+            <li class="search-result_item" onclick="moveTo(${props.longitude}, ${props.latitude}, ${props.id})">
+                <div class="search-result_name"><bold>${props.shelter}</bold></div>
+                <div class="search-result_address"><small>${isFullAddress(props) ? props.address : shelterAddressToString(props)}</small></div>
+           </li>
+        `;
+    }
+
     /**
      * Builds a HTML template (Popup) from a shelter object.
      *
@@ -483,16 +492,4 @@
         `;
     }
 
-    /**
-     * Legend Controls
-     */
-
-    function toggleLegend() {
-        const legendRef = document.getElementById('LegendDetails');
-        if (legendRef.className.match('visible')) {
-            legendRef.className = legendRef.className.replace(' visible', '');
-        } else {
-            legendRef.className = legendRef.className.concat(' visible');
-        }
-    }
 </script>
