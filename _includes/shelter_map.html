@@ -153,7 +153,6 @@
             }
         const matches = buildIndex(sheltersShown).search(query);
         const matchedIds = matches.map(match => match.ref);
-        console.log(matches);
         return shelters.filter(shelter => {
             for (let id of matchedIds) {
                 if (+id === +shelter.id) {
@@ -197,9 +196,7 @@
             zoom: 9
         });
         for ( let shelter of sheltersShown) {
-            console.log(+shelter.id, shelterId);
             if (+shelter.id === +shelterId) {
-                console.log('hit', shelter.id, shelterId);
                 const popup = new mapboxgl.Popup({
                     offset: 25,
                     className: 'shelter-popup'
@@ -225,7 +222,6 @@
         }
         window.shelters = sheltersShown = e.target.response.shelters;
         populateMarkers(sheltersShown);
-        console.log(shelters);
     }
 
     /**
