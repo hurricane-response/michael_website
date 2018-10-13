@@ -67,20 +67,14 @@
     oReq.send();
 
     var navControl = new mapboxgl.NavigationControl();
-    map.addControl(navControl, 'top-right');
-   
-    var geolocate = document.getElementById('geolocate');
-    if (!navigator.geolocation || !geolocate) {
-        geolocate.style.display = 'none';
-    }
-    else {
-        geolocate.onclick = function(e) {
-            navigator.geolocation.getCurrentPosition(function(pos) {
-                map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 11});
-            });
-            return false;
-        }
-    }
+   map.addControl(navControl, 'bottom-right');
+   map.addControl(new mapboxgl.GeolocateControl({
+       className: 'control-geolocate',
+       positionOptions: {
+           enableHighAccuracy: true
+       },
+       trackUserLocation: true
+   }));
 
     function popupTemplate(pod) {
         const address = `
