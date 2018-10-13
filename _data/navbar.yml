@@ -1,6 +1,10 @@
 top-nav:
   - title: Main
     url: /
+  - title: Distribution Points
+    url: /distribution-map
 mobile-nav:
   - title: Main
     url: /
+  - title: Distribution Points
+    url: /distribution-map
