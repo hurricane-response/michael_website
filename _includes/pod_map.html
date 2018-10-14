@@ -26,6 +26,7 @@
     </ul>
 </div>
 <script>
+    let markers = [];
     mapboxgl.accessToken = '{{site.mapbox_access_token}}';
     var map = new mapboxgl.Map({
         container: 'map',
@@ -35,46 +36,54 @@
     });
     var oReq = new XMLHttpRequest();
     oReq.onload = function (e) {
-        if (!(e && e.target && e.target.response && e.target.response.distribution_points))
+        if (!(e && e.target && e.target.response && e.target.response.distribution_points)) {
             return console.log('error fetching shelter JSON');
-        window.pods = e.target.response.distribution_points;
-        for(var i = 0; i < pods.length; i++) {
-            var el = document.createElement('div');
-            el.className = 'marker';
-            // var note = pods[i].notes;
-            //
-            // var html = '<header class="popup-header"><p class="is-size-4 has-text-centered">' + pods[i].facility_name + '</p></header><div class="pod-details"><div class="content is-size-6 has-text-left">';
-            // if (pods[i].address) html += '<div class="address">' + pods[i].address + '</div>';
-            // if (note) html += '<p class="note">Note:</br>' + note + '</p>';
-            // if (pods[i].address) html += '<a class="directions button is-link" target="_blank" href="https://www.google.com/maps/dir/current+location/' + encodeURIComponent(pods[i].address) + '">Directions</a>';
-            //
-            // html += '</div></div>';
-            var html = popupTemplate(pods[i]);
-            var popup = new mapboxgl.Popup({
-                offset: 25,
-                className: 'pod-popup'
-            })
-                // .setHTML(html);
-                .setHTML(html);
-            pods[i].marker = new mapboxgl.Marker(el)
-                .setLngLat([pods[i].longitude, pods[i].latitude])
-                .setPopup(popup)
-                .addTo(map);
         }
+        const distributionPoints = e.target.response.distribution_points;
+        renderMarkersByTitle({data: distributionPoints, map: map});
     };
     oReq.open('GET', 'https://hurricane-florence-api.herokuapp.com/api/v1/distribution_points', true);
     oReq.responseType = 'json';
     oReq.send();
 
     var navControl = new mapboxgl.NavigationControl();
-   map.addControl(navControl, 'bottom-right');
-   map.addControl(new mapboxgl.GeolocateControl({
-       className: 'control-geolocate',
-       positionOptions: {
+    map.addControl(navControl, 'bottom-right');
+    map.addControl(new mapboxgl.GeolocateControl({
+        className: 'control-geolocate',
+        positionOptions: {
            enableHighAccuracy: true
-       },
-       trackUserLocation: true
-   }));
+        },
+        trackUserLocation: true
+    }));
+
+    /**
+     * Renders two types of markers to the map based on if the facility_name contains an certain emoji.
+     *
+     * @param opts
+     */
+    function renderMarkersByTitle(opts) {
+        for (let markerData of opts.data) {
+            const markerElRef = document.createElement('div');
+            const titleTest = markerData.facility_name;
+            if (titleTest.match('🍲')) {
+                markerElRef.style.backgroundImage = 'url("/assets/images/meal-icon-white.png")';
+            }
+            markerElRef.className = 'marker';
+            const popup = new mapboxgl.Popup({
+                offset: 25,
+                className: 'pod-popup'
+            })
+                .setHTML(popupTemplate(markerData));
+            const marker = new mapboxgl.Marker(markerElRef)
+                .setLngLat([markerData.longitude, markerData.latitude])
+                .setPopup(popup)
+                .addTo(opts.map);
+            markers = [
+                ...markers,
+                marker
+            ];
+       }
+   }
 
     function popupTemplate(pod) {
         const address = `
