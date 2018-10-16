@@ -99,8 +99,12 @@ $map-height: 90vh;
     margin-bottom: 5px;
 
     &.active {
-      background: rgba(164, 228, 251, 1);
+      background: rgba(128, 251, 141, 0.75);
       transform: scale(1.1);
+    }
+
+    #ShelterFilter_All.active {
+      background: #00b89c;
     }
   }
 

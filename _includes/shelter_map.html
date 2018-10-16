@@ -9,9 +9,9 @@
                 </svg>
                 Filters</button>
         </div>
-        <ul id="ShelterFiltersUL" class="filters tabs">
-            <!--<li class="filter-item" id="ShelterFilter_All" onclick="onFilterClick(this.id)">All</li>-->
-            <!--<li class="filter-item" id="ShelterFilter_Accepting" onclick="onFilterClick(this.id)">Accepting</li>-->
+        <ul id="ShelterFiltersUL" class="filters tabs visible">
+            <li class="filter-item" id="ShelterFilter_All" onclick="clearFilters()">All</li>
+            <li class="filter-item" id="ShelterFilter_Accepting" onclick="onFilterClick(this.id)">Accepting</li>
             <li class="filter-item" id="ShelterFilter_SpecialNeeds" onclick="onFilterClick(this.id)">Special Needs</li>
             <li class="filter-item" id="ShelterFilter_PetsOK" onclick="onFilterClick(this.id)">Pets allowed</li>
             <!--<li class="filter-item" id="ShelterFilter_SuppliesNeeded" onclick="onFilterClick(this.id)">Supplies Needed</li>-->
@@ -41,8 +41,8 @@
 </div>
 <script>
     window.shelters = null;
-    let sheltersShown = [];
-    let currentFilterActions = [];
+    let _shelters_shown = [];
+    let _current_filters = ['Accepting']; // set vals for default on position
 
     const SHELTER_API = 'https://hurricane-florence-api.herokuapp.com/api/v1/shelters';
     // const SHELTER_API  = 'https://irma-api.herokuapp.com/api/v1/shelters';
@@ -60,8 +60,9 @@
     oReq.onload = function (e) {
         if (!(e && e.target && e.target.response && e.target.response.shelters))
             return console.error('error fetching shelter JSON');
-        window.shelters = sheltersShown = e.target.response.shelters;
-        populateMarkers(sheltersShown);
+        window.shelters = _shelters_shown = e.target.response.shelters;
+        renderMarkers(_shelters_shown);
+        setFilters(_current_filters);
     };
     oReq.open('GET', SHELTER_API, true);
     oReq.responseType = 'json';
@@ -75,6 +76,317 @@
         },
         trackUserLocation: true
     }));
+
+
+    /**
+     * https://github.com/hurricane-response/florence-api/issues/53
+     *
+     * Joins the different address segments into a string,
+     * if state has no value it will just join the zipcode after the city
+     *
+     * @param shelter
+     * @returns {string}
+     */
+    function shelterAddressToString(shelter) {
+
+        return [
+            shelter.address,
+            shelter.city,
+            shelter.state
+            + ' '
+            + shelter.zip
+        ].join(', ');
+    }
+
+    /**
+     * Replaces URLs in a string with anchor elements
+     *
+     * @param content {string}
+     * @returns {string}
+     */
+    function urlsToAnchors(content) {
+        if (!content) {
+            return void 0;
+        }
+        const urlMatchPattern = /(?:(?:https?):\/\/|www\.)(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#\/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[A-Z0-9+&@#\/%=~_|$])/igm;
+        const urls = content.match(urlMatchPattern);
+
+        if (!urls){
+            return content;
+        }
+        urls.forEach(url => {
+            content = content.replace(url, transformToAnchor(url));
+        });
+        return content;
+
+    }
+
+    /**
+     * Replaces url with an html anchor
+     *
+     * @param url
+     * @returns {string}
+     */
+    function transformToAnchor(url) {
+        return `<a role="link" href="${url}" target="_blank">${url}</a>`
+    }
+
+    /**
+     * https://github.com/hurricane-response/florence-api/issues/53
+     *
+     * Checks if address has "," to signify that it contains more than just the street number.
+     *
+     * @param shelter
+     * @returns {boolean}
+     */
+    function isFullAddress(shelter) {
+        if (!shelter.address){
+            return false;
+        }
+
+        return shelter.address.split(',').length > 1;
+    }
+
+    /**
+     * Verifies there is a phone number received that is not "0000000000"
+     *
+     * @param shelter
+     * @returns {boolean}
+     */
+    function isPhone(shelter) {
+        let phone = shelter.cleanPhone.trim();
+
+        if (((/[^\d]/.test(phone)) || (phone.replace(/0+/g, '').length === 0)) && shelter.phone) {
+            phone = shelter.phone.replace(/[^\d]/g, '');
+        }
+
+        return phone.replace(/[\-\+\(\)\s0]+/g, '').length !== 0;
+    }
+
+    /**
+     * (re)populates the map with markers.
+     *
+     * Note: sh3lters is spelled this way to prevent window object collision.
+     *
+     * @param sh3lters
+     * @return void
+     */
+    function renderMarkers(sh3lters) {
+        _shelters_shown.forEach(shelter => {
+            if (shelter.marker) {
+                shelter.marker.remove();
+            }
+        });
+        _shelters_shown = sh3lters;
+        for (let i = 0; i < _shelters_shown.length; i++) {
+            const el = document.createElement('div');
+            el.className = 'marker';
+            const popup = new mapboxgl.Popup({
+                offset: 25,
+                className: 'shelter-popup'
+            }).setHTML(popupTemplate(_shelters_shown[i]));
+            _shelters_shown[i].marker = new mapboxgl.Marker(el)
+                .setLngLat([_shelters_shown[i].longitude, _shelters_shown[i].latitude])
+                .setPopup(popup)
+                .addTo(map);
+        }
+    }
+
+    /**
+     * FILTERS
+     */
+
+    /**
+     * Shows and hides the filter options panel.
+     *
+     */
+    function toggleFiltersVisibility() {
+        const filtersRef = document.getElementById('ShelterFiltersUL');
+        const filtersButtonRef = document.getElementById('ShelterFilterToggle');
+
+        if (filtersRef.className.match('visible')) {
+            filtersRef.className = filtersRef.className.replace(' visible', '');
+            filtersButtonRef.className = filtersButtonRef.className.replace(' active', '');
+
+        } else {
+            filtersRef.className = filtersRef.className.concat(' visible');
+            filtersButtonRef.className = filtersButtonRef.className.concat(' active');
+        }
+    }
+
+    /**
+     * Clears current filters and shows filter types.
+     *
+     * @param types string[]
+     */
+    function setFilters(types) {
+        clearFilters();
+        for (let type of types) {
+            toggleIsActive(document.getElementById('ShelterFilter_'.concat(type)));
+            addFilter(type);
+        }
+        _current_filters = types;
+    }
+
+    /**
+     * Takes filter button id, detects if (non)active and renders filtered data accordingly.
+     *
+     * @param id: string
+     */
+    function onFilterClick(id) {
+        const filterButtonRef = document.getElementById(id);
+        const action = id.split('_')[1];
+        if (action === 'All') {
+            clearFilters();
+            return void 0;
+        }
+        if (toggleIsActive(filterButtonRef)) {
+            addFilter(action)
+        } else {
+            removeFilter(action);
+        }
+    }
+
+    /**
+     *  Clears all filters and actives the All filter button.
+     */
+    function clearFilters() {
+        const filterRefs = document.getElementsByClassName('filter-item');
+        for (let ref of filterRefs) {
+            if (ref.className.match('active') ) {
+                ref.className = ref.className.replace(' active', '');
+            }
+        }
+        const filterAllRef = document.getElementById('ShelterFilter_All');
+        if (!filterAllRef.className.match('active')) {
+            filterAllRef.className = filterAllRef.className.concat(' active');
+        }
+        const nextShown = reduceSheltersByFilter(['All']);
+        renderMarkers(nextShown);
+        _current_filters = [];
+    }
+
+
+    /**
+     *  Adds a filter and renders the results
+     *
+     *  @param type: string
+     */
+    function addFilter(type) {
+        const filterAllRef = document.getElementById('ShelterFilter_All');
+        if (filterAllRef.className.match('active')) {
+            filterAllRef.className = filterAllRef.className.replace(' active', '');
+        }
+        _current_filters = [
+            type,
+            ..._current_filters
+        ];
+        const nextSheltersShown = reduceSheltersByFilter(_current_filters);
+        renderMarkers(nextSheltersShown);
+    }
+
+
+    /**
+     * Removes a filter and renders the results
+     *
+     * @param type: string
+     */
+    function removeFilter(type) {
+        const filterAllRef = document.getElementById('ShelterFilter_All');
+        if (filterAllRef.className.match('active')) {
+            filterAllRef.className = filterAllRef.className.replace(' active', '');
+        }
+        _current_filters = _current_filters
+            .filter(filterType => filterType !== type);
+        if (_current_filters.length === 0) {
+            return clearFilters();
+        }
+        const nextSheltersShown = reduceSheltersByFilter(_current_filters);
+        renderMarkers(nextSheltersShown);
+    }
+
+    /**
+     * Returns an array of shelters based on the reducer logic.
+     *
+     * @param filters: string[]
+     */
+    function reduceSheltersByFilter(filters) {
+        return filters.reduce((nextShown, type) => {
+            return nextShown = filterReducer(nextShown, type);
+        }, shelters);
+    }
+
+    /**
+     * Toggles an element active class and returns a bool based on if the elements
+     * className now says active.
+     *
+     * @param ref: HTMLButtonElement
+     */
+    function toggleIsActive(ref) {
+        if (!ref.className.match('active')) {
+            ref.className = ref.className.concat(' active');
+            return true;
+        } else {
+            ref.className = ref.className.replace(' active', '');
+            return false;
+        }
+    }
+
+    /**
+     * Filters out the state of a shelter array based on case's type.
+     *
+     * @param state: Shelter[]
+     * @param type: string
+     */
+    function filterReducer(state, type) {
+        switch(type) {
+            case'All':
+                return shelters;
+            case'SpecialNeeds':
+                return state.filter(shelter => (shelter.special_needs === true));
+            case'PetsOK':
+                return state.filter(shelter => (
+                    shelter.pets
+                    && shelter.pets !== 'No'
+                    && shelter.pets !== false));
+            case'Accepting':
+                return state.filter(shelter => {
+                    if (shelter.accepting === 'no'
+                        || shelter.accepting === 'No') {
+                            return false;
+                    }
+                    return !!shelter.accepting;
+                });
+            case'SuppliesNeeded':
+                return state.filter(shelter => (
+                    !!shelter.supply_needs
+                    && shelter.supply_needs.length > 0)); // not sure how the data comes back
+            case'VolunteersNeeded':
+                return state.filter(shelter => (
+                    !!shelter.volunteer_needs
+                    && shelter.volunteer_needs.length > 0)); // not sure how the data comes back
+            default:
+                console.error('Filter action not registered: ', type);
+                return state;
+        }
+    }
+
+    /**
+     *  //END FILTERS//
+     */
+
+    /**
+     * LEGEND CONTROLS
+     */
+
+    function toggleLegend() {
+        const legendRef = document.getElementById('LegendDetails');
+        if (legendRef.className.match('visible')) {
+            legendRef.className = legendRef.className.replace(' visible', '');
+        } else {
+            legendRef.className = legendRef.className.concat(' visible');
+        }
+    }
 
     /**
      * Builds a HTML template (Popup) from a shelter object.
@@ -150,209 +462,5 @@
                 </div>
             </div>
         `;
-    }
-
-
-    /**
-     * https://github.com/hurricane-response/florence-api/issues/53
-     *
-     * Joins the different address segments into a string,
-     * if state has no value it will just join the zipcode after the city
-     *
-     * @param shelter
-     * @returns {string}
-     */
-    function shelterAddressToString(shelter) {
-
-        return [
-            shelter.address,
-            shelter.city,
-            shelter.state
-            + ' '
-            + shelter.zip
-        ].join(', ');
-    }
-
-    /**
-     * replaces URLs in a string with anchor elements
-     *
-     * @param content {string}
-     * @returns {string}
-     */
-    function urlsToAnchors(content) {
-        if (!content) {
-            return void 0;
-        }
-        const urlMatchPattern = /(?:(?:https?):\/\/|www\.)(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[-A-Z0-9+&@#\/%=~_|$?!:,.])*(?:\([-A-Z0-9+&@#\/%=~_|$?!:,.]*\)|[A-Z0-9+&@#\/%=~_|$])/igm;
-        const urls = content.match(urlMatchPattern);
-
-        if (!urls){
-            return content;
-        }
-        urls.forEach(url => {
-            content = content.replace(url, transformToAnchor(url));
-        });
-        return content;
-
-        /**
-         * replaces url with an html anchor
-         *
-         * @param url
-         * @returns {string}
-         */
-        function transformToAnchor(url) {
-            return `<a role="link" href="${url}" target="_blank">${url}</a>`
-        }
-
-    }
-
-    /**
-     * https://github.com/hurricane-response/florence-api/issues/53
-     *
-     * Checks if address has "," to signify that it contains more than just the street number.
-     *
-     * @param shelter
-     * @returns {boolean}
-     */
-    function isFullAddress(shelter) {
-        if (!shelter.address){
-            return false;
-        }
-
-        return shelter.address.split(',').length > 1;
-    }
-
-    /**
-     * Verifies there is a phone number received that is not "0000000000"
-     *
-     * @param shelter
-     * @returns {boolean}
-     */
-    function isPhone(shelter) {
-        let phone = shelter.cleanPhone.trim();
-
-        if (((/[^\d]/.test(phone)) || (phone.replace(/0+/g, '').length === 0)) && shelter.phone) {
-            phone = shelter.phone.replace(/[^\d]/g, '');
-        }
-
-        return phone.replace(/[\-\+\(\)\s0]+/g, '').length !== 0;
-    }
-
-    /**
-     * (re)populates the map with markers.
-     *
-     * Note: sh3lters is spelled this way to prevent window object collision.
-     *
-     * @param sh3lters
-     * @return void
-     */
-    function populateMarkers(sh3lters) {
-        sheltersShown.forEach(shelter => {
-            if (shelter.marker) {
-                shelter.marker.remove();
-            }
-        });
-        sheltersShown = sh3lters;
-        for (let i = 0; i < sheltersShown.length; i++) {
-            const el = document.createElement('div');
-            el.className = 'marker';
-            const popup = new mapboxgl.Popup({
-                offset: 25,
-                className: 'shelter-popup'
-            }).setHTML(popupTemplate(sheltersShown[i]));
-            sheltersShown[i].marker = new mapboxgl.Marker(el)
-                .setLngLat([sheltersShown[i].longitude, sheltersShown[i].latitude])
-                .setPopup(popup)
-                .addTo(map);
-        }
-    }
-
-    /**
-     * Filters
-     */
-
-    function toggleFiltersVisibility() {
-        const filtersRef = document.getElementById('ShelterFiltersUL');
-        const filtersButtonRef = document.getElementById('ShelterFilterToggle');
-
-        if (filtersRef.className.match('visible')) {
-            filtersRef.className = filtersRef.className.replace(' visible', '');
-            filtersButtonRef.className = filtersButtonRef.className.replace(' active', '');
-
-        } else {
-            filtersRef.className = filtersRef.className.concat(' visible');
-            filtersButtonRef.className = filtersButtonRef.className.concat(' active');
-        }
-    }
-
-    function onFilterClick(id) {
-        const filterButtonRef = document.getElementById(id);
-        const action = id.split('_')[1];
-
-        if (filterButtonRef.className.match('active') ) {
-            currentFilterActions = currentFilterActions.filter(val => val !== action);
-            if (!ifIsAll()) {
-                const nextSheltersShown = currentFilterActions.reduce((nextShown, action) => {
-                    return nextShown = filterReducer(nextShown, action);
-                }, shelters);
-
-                populateMarkers(nextSheltersShown);
-
-            }
-            filterButtonRef.className = filterButtonRef.className.replace(' active', '');
-
-        } else {
-            currentFilterActions = [action, ...currentFilterActions];
-            if (!ifIsAll()) {
-                const nextSheltersShown = currentFilterActions.reduce((nextShown, action) => {
-                    return nextShown = filterReducer(nextShown, action);
-                }, shelters);
-
-                populateMarkers(nextSheltersShown);
-
-            }
-            filterButtonRef.className = filterButtonRef.className.concat(' active');
-        }
-
-        function ifIsAll() {
-            if (currentFilterActions.includes('All')) {
-                populateMarkers(filterReducer(sheltersShown, 'All'));
-                return true;
-            }
-            return false;
-        }
-    }
-
-    function filterReducer(current, action) {
-        switch(action) {
-            case'All':
-                return shelters;
-            case'SpecialNeeds':
-                return current.filter(shelter => (shelter.special_needs === true));
-            case'PetsOK':
-                return current.filter(shelter => (shelter.pets && shelter.pets !== 'No' && shelter.pets !== false));
-            case'Accepting':
-                return current.filter(shelter => shelter.accepting === true);
-            case'SuppliesNeeded':
-                return current.filter(shelter => (!!shelter.supply_needs && shelter.supply_needs.length > 0)); // not sure how the data comes back
-            case'VolunteersNeeded':
-                return current.filter(shelter => (!!shelter.volunteer_needs && shelter.volunteer_needs.length > 0)); // not sure how the data comes back
-            default:
-                console.error('Filter action not registered: ', action);
-                return current;
-        }
-    }
-
-    /**
-     * Legend Controls
-     */
-
-    function toggleLegend() {
-        const legendRef = document.getElementById('LegendDetails');
-        if (legendRef.className.match('visible')) {
-            legendRef.className = legendRef.className.replace(' visible', '');
-        } else {
-            legendRef.className = legendRef.className.concat(' visible');
-        }
     }
 </script>
