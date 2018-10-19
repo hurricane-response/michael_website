@@ -28,7 +28,7 @@ A separate collection for states also dynamically generated appears below.
 
 See our [open issues](https://github.com/hurricane-response/michael_website/issues)
 
-
+**Note:** Mapbox donates their product to us for free for volunteer projects only -- if the project ends up getting adopted by a government partner or somehow turns into a commercial project, we'll have to plan a transition to a different Mapbox account.
 
 ## Getting involved
 
